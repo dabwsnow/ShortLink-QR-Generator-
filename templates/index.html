@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}ShortLink & QR &bull; Сокращатель ссылок и генератор QR-кодов{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <h1 class="hero-title">Сокращай ссылки. <br><span class="gradient-text">Генерируй QR мгновенно.</span></h1>
+    <p class="hero-subtitle">Быстрый, легковесный сервис сокращения URL с генерацией QR-кодов и аналитикой кликов.</p>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_links }}</span>
+            <span class="stat-label">Создано ссылок</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_clicks }}</span>
+            <span class="stat-label">Всего переходов</span>
+        </div>
+    </div>
+</section>
+
+<section class="card form-card">
+    <h2 class="card-title">Создать короткую ссылку</h2>
+
+    <form method="post" action="{% url 'shortener:index' %}" class="shortener-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.original_url.id_for_label }}">Длинный URL</label>
+            {{ form.original_url }}
+            {% if form.original_url.errors %}
+                <div class="field-error">{{ form.original_url.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-grid-2">
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Название / Метка</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="field-error">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.custom_code.id_for_label }}">Кастомный код</label>
+                {{ form.custom_code }}
+                {% if form.custom_code.errors %}
+                    <div class="field-error">{{ form.custom_code.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <span>Сократить и создать QR</span>
+            <span class="btn-arrow">&rarr;</span>
+        </button>
+    </form>
+</section>
+
+<section class="card table-card">
+    <div class="card-header-flex">
+        <h2 class="card-title">Недавние ссылки</h2>
+        <span class="badge">{{ recent_links|length }} последних</span>
+    </div>
+
+    {% if recent_links %}
+        <div class="table-responsive">
+            <table class="links-table">
+                <thead>
+                    <tr>
+                        <th>Короткая ссылка</th>
+                        <th>Оригинал</th>
+                        <th>Клики</th>
+                        <th>Дата</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_links %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'shortener:redirect' item.code %}" target="_blank" class="short-link-badge">
+                                /{{ item.code }}
+                            </a>
+                        </td>
+                        <td class="td-truncate" title="{{ item.original_url }}">
+                            {% if item.title %}
+                                <div class="link-title">{{ item.title }}</div>
+                            {% endif %}
+                            <span class="link-original">{{ item.original_url }}</span>
+                        </td>
+                        <td>
+                            <span class="clicks-pill">{{ item.clicks }}</span>
+                        </td>
+                        <td class="td-date">{{ item.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <div class="table-actions">
+                                <a href="{% url 'shortener:info' item.code %}" class="btn-action" title="QR и статистика">QR</a>
+                                <form method="post" action="{% url 'shortener:delete' item.code %}" class="inline-form" onsubmit="return confirm('Удалить эту ссылку?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-action btn-action-delete" title="Удалить">&times;</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Ссылок пока нет. Создайте первую ссылку прямо сейчас!</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Информация о ссылке /{{ link.code }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'shortener:index' %}">&larr; Вернуться к списку</a>
+</div>
+
+<div class="detail-grid">
+    <section class="card qr-card">
+        <h2 class="card-title">QR-код ссылки</h2>
+        <div class="qr-preview-wrapper">
+            <img src="{{ qr_data_uri }}" alt="QR Code" class="qr-image" id="qrImage">
+        </div>
+        <div class="qr-actions">
+            <a href="{% url 'shortener:qr_download' link.code %}" class="btn btn-secondary btn-full">
+                <span>Скачать QR (PNG)</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="card info-card">
+        <div class="card-header-flex">
+            <h2 class="card-title">Информация</h2>
+            <span class="badge badge-accent">/{{ link.code }}</span>
+        </div>
+
+        {% if link.title %}
+            <div class="info-block">
+                <span class="info-label">Название</span>
+                <span class="info-value font-bold">{{ link.title }}</span>
+            </div>
+        {% endif %}
+
+        <div class="info-block">
+            <span class="info-label">Короткая ссылка</span>
+            <div class="copy-box">
+                <input type="text" readonly value="{{ short_url }}" id="shortUrlInput" class="copy-input">
+                <button type="button" class="btn btn-copy" onclick="copyShortUrl()">
+                    <span id="copyBtnText">Копировать</span>
+                </button>
+            </div>
+            <a href="{{ short_url }}" target="_blank" class="test-link">Открыть в новой вкладке &nearr;</a>
+        </div>
+
+        <div class="info-block">
+            <span class="info-label">Оригинальный адрес</span>
+            <a href="{{ link.original_url }}" target="_blank" class="info-link-long">
+                {{ link.original_url }}
+            </a>
+        </div>
+
+        <div class="stats-mini-grid">
+            <div class="stat-mini">
+                <span class="stat-mini-num">{{ link.clicks }}</span>
+                <span class="stat-mini-label">Кликов</span>
+            </div>
+            <div class="stat-mini">
+                <span class="stat-mini-num">{{ link.created_at|date:"d.m.Y" }}</span>
+                <span class="stat-mini-label">Создана</span>
+            </div>
+            <div class="stat-mini">
+                <span class="stat-mini-num">
+                    {% if link.last_accessed %}
+                        {{ link.last_accessed|date:"H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+                <span class="stat-mini-label">Посл. переход</span>
+            </div>
+        </div>
+
+        <div class="danger-zone">
+            <form method="post" action="{% url 'shortener:delete' link.code %}" onsubmit="return confirm('Вы уверены, что хотите удалить эту ссылку?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-full">Удалить ссылку</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
