@@ -4,6 +4,17 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+for env_name in [".env.local", ".env"]:
+    env_path = BASE_DIR / env_name
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        break
+
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-final-url-shortener-qr-key-production-ready"
 )
